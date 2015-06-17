@@ -115,11 +115,6 @@ class SearchResults extends Component {
       });
   }
 
-  getImage(source) {
-    //return 'http://www.zhiribao.com/upload/' + source + "!"+ 80 * 2 + "_"+ 80 * 2 +".jpg";
-    return 'http://www.zhiribao.com/upload/' + source;
-  }
-
   rowPressed(data) {
 
     this.props.navigator.push({
@@ -146,7 +141,7 @@ class SearchResults extends Component {
           underlayColor='#dddddd'>
         <View>
           <View style={styles.rowContainer}>
-            <Image style={styles.thumb} source={{ uri: this.getImage(rowData.image) }} />
+            <Image style={styles.thumb} source={{ uri: Api.getImage(rowData.image) }} />
             <View  style={styles.textContainer}>
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle} 

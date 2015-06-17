@@ -17,22 +17,16 @@ var TabBarItemIOS = TabBarIOS.Item;
 
 var styles = React.StyleSheet.create({
   container: {
-        backgroundColor: '#efefef',
-        flex:1,
-    },
-    description: {
-        marginBottom: 20,
-        fontSize: 18,
-        textAlign: 'center',
-        color: '#656565'
-      },
+    backgroundColor: '#efefef',
+    flex:1,
+  },
 });
 
 function _icon(imageUri) {
-    return {
-        uri: imageUri,
-        isStatic: true
-    };
+  return {
+    uri: imageUri,
+    isStatic: true
+  };
 }
 
 class zhiribao extends React.Component {
@@ -41,12 +35,8 @@ class zhiribao extends React.Component {
     super(props);
     this.state = {
       selectedTab : 'list',
-      isLoading: true,
-      message: '启动中。。。',
-      data : {}
     };
   }
-
   render() {
     return (
       <TabBarIOS selectedTab={this.state.selectedTab}>
@@ -81,29 +71,6 @@ class zhiribao extends React.Component {
         </TabBarItemIOS>
       </TabBarIOS>
     );
-    var spinner = this.state.isLoading ?
-      ( <ActivityIndicatorIOS
-          hidden='true'
-          size='large'/> ) :
-      ( <View/>);
-    if (this.state.data.length > 0) {
-        return (
-          <React.NavigatorIOS
-            style={styles.container}
-            initialRoute={{
-              title: '值日报',
-              component: ProductList,
-              passProps: {listings: this.state.data}
-            }}/>
-        );
-    } else {
-        return (
-            <View style={styles.container}>
-                <Text style={styles.description}>{this.state.message}</Text>
-                {spinner}
-            </View>
-        );
-    }
   }
 }
 

@@ -1,5 +1,6 @@
 'use strict';
-var HOST_URI = 'http://www.zhiribao.com/api/v1/';
+var HOST = 'http://www.zhiribao.com';
+var HOST_URI = HOST +　'/api/v1/';
 // category
 var Categories = 'categories';
 var ProductList = 'products?offset=20';
@@ -21,8 +22,14 @@ function _getProductList(o){
     return HOST_URI + ProductList + _obj2uri(o);
 }
 
+function _getImage(source) {
+    //return 'http://www.zhiribao.com/upload/' + source + "!"+ 80 * 2 + "_"+ 80 * 2 +".jpg";
+    return HOST　+ '/upload/' + source;
+}
+
 
 module.exports = {
     getAllCategory: _getAllCategory,
     getProductList: _getProductList,
+    getImage      :_getImage
 };
