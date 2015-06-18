@@ -3,13 +3,14 @@
 var React = require('react-native');
 var ProductList = require('./app/lists');
 
+//var SMXTabBarIOS = require('SMXTabBarIOS');
+// var SMXTabBarItemIOS = SMXTabBarIOS.Item;
+
 var {
   AppRegistry,
   StyleSheet,
   NavigatorIOS,
   TabBarIOS,
-  View,
-  Text,
   ActivityIndicatorIOS
 } = React;
 
@@ -52,6 +53,7 @@ class zhiribao extends React.Component {
               }}>
               <NavigatorIOS style={styles.container}
                   tintColor={'#333344'}
+                  barTintColor={'#0379d5'}
                   initialRoute={{
                     title: '值日报',
                     component: ProductList
