@@ -1,6 +1,7 @@
 'use strict';
 
 var React = require('react-native');
+var Icon = require('FAKIconImage');
 var ProductList = require('./app/lists');
 
 //var SMXTabBarIOS = require('SMXTabBarIOS');
@@ -11,7 +12,8 @@ var {
   StyleSheet,
   NavigatorIOS,
   TabBarIOS,
-  ActivityIndicatorIOS
+  ActivityIndicatorIOS,
+  Text
 } = React;
 
 var TabBarItemIOS = TabBarIOS.Item;
@@ -38,7 +40,7 @@ class zhiribao extends React.Component {
       selectedTab : 'list',
     };
   }
-  render() {
+  render() { 
     return (
       <TabBarIOS selectedTab={this.state.selectedTab}>
         <TabBarItemIOS accessibilityLabel={"Latest"}
@@ -57,21 +59,44 @@ class zhiribao extends React.Component {
                   initialRoute={{
                     title: '值日报',
                     component: ProductList
-                  }}
-                  itemWrapperStyle={styles.navigator} />
+                  }} />
         </TabBarItemIOS>
-        <TabBarItemIOS accessibilityLabel={"Nodes"}
-              selected={this.state.selectedTab === 'nodeMap'}
-              title="NodeMap"
-              name="nodeMap"
-              icon={_icon('bookmarks')}
+
+        <TabBarItemIOS accessibilityLabel={"Foreign"}
+              selected={this.state.selectedTab === 'foreign'}
+              title="国外"
+              name="foreignList"
+              icon={_icon('top-rated')}
               onPress={() => {
                   this.setState({
-                    selectedTab: 'nodeMap'
+                    selectedTab: 'foreign'
                   });
               }}>
+              <Text>fuck u</Text>
+        </TabBarItemIOS>
+
+        <TabBarItemIOS accessibilityLabel={"Search"}
+              selected={this.state.selectedTab === 'search'}
+              title="搜索"
+              name="search"
+              icon={_icon('search')}
+              onPress={() => {
+                  this.setState({
+                    selectedTab: 'search'
+                  });
+              }}>
+              <Text>fuck me</Text>
         </TabBarItemIOS>
       </TabBarIOS>
+    );
+    return (
+      <NavigatorIOS style={styles.container}
+                  tintColor={'#333344'}
+                  barTintColor={'#0379d5'}
+                  initialRoute={{
+                    title: '值日报',
+                    component: ProductList
+                  }} />
     );
   }
 }

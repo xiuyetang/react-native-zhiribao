@@ -3,7 +3,7 @@ var HOST = 'http://www.zhiribao.com';
 var HOST_URI = HOST +　'/api/v1/';
 // category
 var Categories = 'categories';
-var ProductList = 'products?offset=20';
+var ProductList = 'products';
 // 获取用户信息
 var UserInfo = 'member';
 function _obj2uri(obj){
@@ -19,7 +19,7 @@ function _getAllCategory(){
 
 
 function _getProductList(o){
-    return HOST_URI + ProductList + _obj2uri(o);
+    return HOST_URI + ProductList + "?" + _obj2uri(o);
 }
 
 function _getImage(source) {

@@ -11,7 +11,9 @@ var {
   View,
   TouchableOpacity,
   Text,
-  Component
+  Component,
+  PixelRatio,
+  ScrollView,
 } = React;
 
 var styles = StyleSheet.create({
@@ -19,8 +21,11 @@ var styles = StyleSheet.create({
     fontWeight: '300',
     color: '#FF3366', // pink links
   },
+  contentContainer: {
+    padding: 10,
+  },
   container: {
-    marginTop: 65
+    flex: 1,
   },
   heading: {
     backgroundColor: '#F8F8F8',
@@ -30,6 +35,7 @@ var styles = StyleSheet.create({
     backgroundColor: '#DDDDDD'
   },
   image: {
+    flex: 1,
     width: 400,
     height: 300
   },
@@ -45,9 +51,10 @@ var styles = StyleSheet.create({
     color: '#656565'
   },
   buttonGroup: {
+    flex: 1,
     marginTop: 30,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   buyBox: {
     alignItems: 'center',
@@ -66,7 +73,7 @@ var styles = StyleSheet.create({
 class ProductDetail extends Component {
 
   constructor(props) {
-    super(props); 
+    super(props);
   }
   goBuy(url) {
     this.props.navigator.navigationBarHidden = true;
@@ -86,6 +93,7 @@ class ProductDetail extends Component {
   render() {
     var data = this.props.data;
     return (
+      <ScrollView contentContainerStyle={styles.contentContainer}>
       <View style={styles.container}>
         <Image style={styles.image}
             resizeMode={'contain'} 
@@ -97,8 +105,8 @@ class ProductDetail extends Component {
         <View>
         <Text style={styles.description}>form {data.source}</Text>
         <HTMLView
-          value={data.content}
-          stylesheet={styles}/>
+          stylesheet={styles}
+          value={data.content}/>
         </View>
         <View style={styles.buttonGroup}>
           <TouchableOpacity activeOpacity={0.8} onPress={() => this.goBuy(data.source_link)}>
@@ -108,6 +116,7 @@ class ProductDetail extends Component {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     );
   }
 };
