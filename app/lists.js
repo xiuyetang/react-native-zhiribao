@@ -1,8 +1,11 @@
 'use strict';
 var React = require('react-native');
+var RefreshableListView = require('react-native-refreshable-listview')
+
 var TimerMixin = require('react-timer-mixin');
 var Detail = require('./detail');
 var Api = require('./api');
+var Helper = require('./helper');
 var {
   ActivityIndicatorIOS,
   StyleSheet,
@@ -12,7 +15,7 @@ var {
   ListView,
   Text,
   ScrollView,
-  Component
+  Component,
 } = React;
 
 var styles = StyleSheet.create({
@@ -34,6 +37,7 @@ var styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     height: 1,
     marginLeft: 4,
+    flex:1
   },
   rowSeparatorHide: {
     opacity: 0.0,
@@ -78,16 +82,24 @@ var styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#d37777'
+    color: '#666',
+    height:60
+  },
+  subView: {
+    flexDirection: 'row'
+  },
+  cell: {
+    flex: 1,
   },
   subtitle: {
     fontSize: 14,
-    color: '#656565'
+    color: '#656565',
+    textAlign:'left',
   },
   mall: {
-    alignItems: 'flex-end',
-    backgroundColor:'pink',
-    color: '#5db95b'
+    color: '#5db95b',
+    textAlign: 'right',
+    marginRight:20
   },
   rowContainer: {
     flexDirection: 'row',
@@ -95,22 +107,39 @@ var styles = StyleSheet.create({
   }
 });
 
+var indicatorStylesheet = StyleSheet.create({
+  wrapper: {
+    backgroundColor: 'red',
+    height: 60,
+    marginTop: 10,
+  },
+  content: {
+    backgroundColor: 'blue',
+    marginTop: 10,
+    height: 60,
+  },
+})
+
 var resultData = [];
+var cacheDataPid = [];
+
+var ds = new ListView.DataSource(
+      {rowHasChanged: (r1, r2) => r1.id !== r2.id});
 
 var SearchResults = React.createClass({
   mixins: [TimerMixin],
 
   getInitialState: function() {
-    var dataSource = new ListView.DataSource(
-      {rowHasChanged: (r1, r2) => r1.id !== r2.id});
+    
     return {
       isLoading: true,
       isLoadingTail: false,
       message : 'loading...',
-      dataSource: dataSource,
+      dataSource: ds,
       queryPage: 1,
-      offset: 20,
-      cacheDataLength: 0
+      offset: 10,
+      cacheDataLength: 0,
+      headerLoding: false
     };
 
     
@@ -120,16 +149,40 @@ var SearchResults = React.createClass({
     this._executeQuery(query);
   },
 
-  _handleResponse: function(response) {
+  _handleResponse: function(response, pop) {
     
     this.setState({ isLoading: false });
     if (response.status === 'ok') {
+      if (pop) {
+        // 倒序排列
+        response.data = response.data.reverse();
+      }
       // var dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
       for (var i in response.data) {
-        resultData.push(response.data[i]);
+        // 去重复
+        // resultData.push(response.data[i]);
+        var exists = false;
+        for (var j=0; j< cacheDataPid.length; j++) {
+          if (response.data[i].id == cacheDataPid[j]) {
+            exists = true;
+            break;
+          }
+        } 
+
+        if (exists) {
+          continue;
+        }
+        if (pop) {
+          resultData.unshift(response.data[i]);
+        } else {
+          resultData.push(response.data[i]);
+        }
+        // resultData.push(response.data[i]);
+        cacheDataPid.push(response.data[i].id);
       }
+
       this.setState({
-        dataSource : this.state.dataSource.cloneWithRows(resultData), //response.data,
+        dataSource : ds.cloneWithRows(resultData), //response.data,
         isLoading:false,
         isLoadingTail: false,
         cacheDataLength: response.data.length
@@ -138,11 +191,10 @@ var SearchResults = React.createClass({
       this.setState({ message: 'no result found'});
     }
   },
-  _executeQuery: function(query) {
-    console.log('test');
+  _executeQuery: function(query, pop) {
     fetch(query)
       .then(response => response.json())
-      .then(json => this._handleResponse(json))
+      .then(json => this._handleResponse(json, pop))
       .catch(error => {
         this.setState({
           isLoading: false,
@@ -153,11 +205,15 @@ var SearchResults = React.createClass({
   },
 
   rowPressed: function(data) {
-
     this.props.navigator.push({
       title: data.title,
       component: Detail,
-      passProps: {data: data}
+      passProps: {
+        data: data,
+        onExternalZrbRequested: (zrbView) => {
+          this.props.onExternalZrbRequested(zrbView);
+        } 
+      }
     });
   },
   hasMore: function() {
@@ -181,51 +237,10 @@ var SearchResults = React.createClass({
       isLoadingTail: true,
       queryPage: page
     });
-    console.log(page);
+
     var query = Api.getProductList({page: page, offset: this.state.offset});
-    console.log(query);
     this._executeQuery(query);
     return;
-
-    
-
-    var page = resultsCache.nextPageNumberForQuery[query];
-    this._executeQuery(query);
-    fetch(this._urlForQueryAndPage(query, page))
-      .then((response) => response.json())
-      .catch((error) => {
-        console.error(error);
-        LOADING[query] = false;
-        this.setState({
-          isLoadingTail: false,
-        });
-      })
-      .then((responseData) => {
-        var moviesForQuery = resultsCache.dataForQuery[query].slice();
-
-        LOADING[query] = false;
-        // We reached the end of the list before the expected number of results
-        if (!responseData.movies) {
-          resultsCache.totalForQuery[query] = moviesForQuery.length;
-        } else {
-          for (var i in responseData.movies) {
-            moviesForQuery.push(responseData.movies[i]);
-          }
-          resultsCache.dataForQuery[query] = moviesForQuery;
-          resultsCache.nextPageNumberForQuery[query] += 1;
-        }
-
-        if (this.state.filter !== query) {
-          // do not update state if the query is stale
-          return;
-        }
-
-        this.setState({
-          isLoadingTail: false,
-          dataSource: this.getDataSource(resultsCache.dataForQuery[query]),
-        });
-      })
-      .done();
   },
 
   renderLoading: function(){
@@ -247,12 +262,18 @@ var SearchResults = React.createClass({
           <View style={styles.rowContainer}>
             <Image style={styles.thumb} source={{ uri: Api.getImage(rowData.image) }} />
             <View  style={styles.textContainer}>
-              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.title} numberOfLines={3}>{title}</Text>
+
+              <View style={styles.subView}>
+              <View style={styles.cell}>
               <Text style={styles.subtitle} 
                     numberOfLines={1}>由 {rowData.source} 发布
-                    <Text style={styles.mall} 
-                    numberOfLines={1}>{rowData.name}</Text>
+                    
                   </Text>
+                  </View>
+                  <View style={styles.cell}>
+                  <Text style={styles.mall} numberOfLines={1}>{rowData.name}</Text></View>
+              </View>
               
             </View>
           </View>
@@ -262,17 +283,40 @@ var SearchResults = React.createClass({
     );
   },
 
+  renderHeaderWrapper: function() {
+    return this.state.headerLoding ? (
+      <View>
+      <Text>{'加载中'}</Text>
+      <ActivityIndicatorIOS style={styles.scrollSpinner} />
+      </View>
+    ) : (<View/>)
+  },
+  reloadList: function() {
+    var query = Api.getProductList({page: 1, offset: this.state.offset});
+    this._executeQuery(query, true);
+  },
+
   render: function() {
     if(this.state.isLoading){
       return this.renderLoading();
     }
     return (
 
-        <ListView
+        <RefreshableListView
           ref="listview"
           dataSource={this.state.dataSource}
           renderFooter={this.renderFooter}
+
+          loadData={this.reloadList}
+          refreshDescription="获取新数据"
+          refreshingIndictatorComponent={
+            <ActivityIndicatorIOS style={styles.scrollSpinner} />
+            
+          }
+          /*renderHeaderWrapper={this.renderHeaderWrapper}*/
+
           renderRow={this.renderRow}
+          onEndReachedThreshold={0}
           onEndReached={this.onEndReached}
           automaticallyAdjustContentInsets={true}
           keyboardShouldPersistTaps={false}
@@ -280,122 +324,5 @@ var SearchResults = React.createClass({
     );
   }
 })
-
-class SearchResultsC extends Component {
-
-  constructor(props) {
-    super(props);
-    var dataSource = new ListView.DataSource(
-      {rowHasChanged: (r1, r2) => r1.id !== r2.id});
-    this.state = {
-      isLoading: true,
-      isLoadingTail: false,
-      message : 'loading...',
-      dataSource: dataSource,
-      queryNumber: 1
-    };
-
-    var query = Api.getProductList({page: 1});
-    this._executeQuery(query);
-  }
-
-  _handleResponse(response) {
-    
-    this.setState({ isLoading: false });
-    if (response.status === 'ok') {
-      // var dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
-
-      this.setState({
-        dataSource : this.state.dataSource.cloneWithRows(response.data), //response.data,
-        isLoading:false
-      });
-    } else {
-      this.setState({ message: 'no result found'});
-    }
-  }
-  _executeQuery(query) {
-    fetch(query)
-      .then(response => response.json())
-      .then(json => this._handleResponse(json))
-      .catch(error => {
-        this.setState({
-          isLoading: false,
-          message: 'Something bad happened ' + error
-        });
-      });
-  }
-
-  rowPressed(data) {
-
-    this.props.navigator.push({
-      title: data.title,
-      component: Detail,
-      passProps: {data: data}
-    });
-  }
-  hasMore() {
-    var query = this.state.filter;
-    if (!resultsCache.dataForQuery[query]) {
-      return true;
-    }
-    return (
-      resultsCache.totalForQuery[query] !==
-      resultsCache.dataForQuery[query].length
-    );
-  }
-  renderFooter() {
-    if (!this.hasMore() || !this.state.isLoadingTail) {
-      return <View style={styles.scrollSpinner} />;
-    }
-    return <ActivityIndicatorIOS style={styles.scrollSpinner} />;
-  }
-
-  renderLoading(){
-    return (
-      <View style={styles.container}>
-        <Text style={styles.loadingText}>
-          {'加载中...'}
-        </Text>
-      </View>
-    );
-  }
-
-  renderRow(rowData, sectionID, rowID) {
-    var title = rowData.title;
-    return (
-      <TouchableHighlight onPress={() => this.rowPressed(rowData)}
-          underlayColor='#dddddd'>
-        <View>
-          <View style={styles.rowContainer}>
-            <Image style={styles.thumb} source={{ uri: Api.getImage(rowData.image) }} />
-            <View  style={styles.textContainer}>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.subtitle} 
-                    numberOfLines={1}>由 {rowData.source} 发布
-                    <Text style={styles.mall} 
-                    numberOfLines={1}>{rowData.name}</Text>
-                  </Text>
-              
-            </View>
-          </View>
-          <View style={styles.separator}/>
-        </View>
-      </TouchableHighlight>
-    );
-  }
-
-  render() {
-    if(this.state.isLoading){
-      return this.renderLoading();
-    }
-    return (
-      <ListView
-        ref="listview"
-        dataSource={this.state.dataSource}
-        renderRow={this.renderRow.bind(this)}/>
-    );
-  }
-}
-
 
 module.exports = SearchResults;

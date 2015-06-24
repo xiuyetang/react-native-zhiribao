@@ -11,6 +11,7 @@
     "react-native-html-webview": "0.0.8",
     "react-native-htmlview": "^0.2.0",
     "react-native-icons": "^0.1.0",
+    "react-native-refreshable-listview": "^1.2.0",
     "react-native-router": "^0.2",
     "react-native-side-menu": "^0.2.5",
     "react-timer-mixin": "^0.13.1",
