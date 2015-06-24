@@ -4,6 +4,7 @@ var React = require('react-native');
 var Icon = require('FAKIconImage');
 var TimerMixin = require('react-timer-mixin');
 var ProductList = require('./app/lists');
+var ProductListForeign = require('./app/listsForeign');
 
 //var SMXTabBarIOS = require('SMXTabBarIOS');
 // var SMXTabBarItemIOS = SMXTabBarIOS.Item;
@@ -16,6 +17,7 @@ var {
   ActivityIndicatorIOS,
   AsyncStorage,
   Text,
+  StatusBarIOS,
   NetInfo
 } = React;
 
@@ -75,6 +77,8 @@ class zhiribao extends React.Component {
   }
 
   render() { 
+    StatusBarIOS.setStyle('light-content');
+    // StatusBarIOS.setHidden(true, 'none');
     if (this.state.reachability == 'None' || this.state.reachability == 'Unknown') {
       return (
         <View style={styles.container}><Text>请检查网络设置</Text></View>
@@ -101,7 +105,9 @@ class zhiribao extends React.Component {
                   });
               }}>
               <NavigatorIOS style={styles.container}
-                  tintColor={'#333344'}
+                  tintColor="#FFFFFF"
+                  titleTextColor={'white'}
+
                   barTintColor={'#0379d5'}
                   /*navigationBarHidden={true}*/
                   initialRoute={{
@@ -125,7 +131,22 @@ class zhiribao extends React.Component {
                     selectedTab: 'foreign'
                   });
               }}>
-              <Text>fuck u</Text>
+              <NavigatorIOS style={styles.container}
+                  tintColor="#FFFFFF"
+                  titleTextColor={'white'}
+
+                  barTintColor={'#0379d5'}
+                  /*navigationBarHidden={true}*/
+                  initialRoute={{
+                    title: '海淘-值日报',
+                    component: ProductListForeign,
+                    passProps: {
+                      foreign:'us',
+                      onExternalZrbRequested: (zrbView) => {
+                        this.setState({ openZrbExternal: zrbView, });
+                      }
+                    }
+                  }} />
         </TabBarItemIOS>
 
         <TabBarItemIOS accessibilityLabel={"Search"}

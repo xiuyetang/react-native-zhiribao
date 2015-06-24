@@ -123,7 +123,7 @@ var indicatorStylesheet = StyleSheet.create({
 var ds = new ListView.DataSource(
       {rowHasChanged: (r1, r2) => r1.id !== r2.id});
 
-var SearchResults = React.createClass({
+var listsForeign = React.createClass({
   mixins: [TimerMixin],
   resultData: [],
   cacheDataPid: [],
@@ -144,7 +144,7 @@ var SearchResults = React.createClass({
     
   },
   componentDidMount: function() {
-    var query = Api.getProductList({page: this.state.queryPage, offset: this.state.offset});
+    var query = Api.getProductList({page: this.state.queryPage, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query);
   },
 
@@ -238,7 +238,7 @@ var SearchResults = React.createClass({
       queryPage: page
     });
 
-    var query = Api.getProductList({page: page, offset: this.state.offset});
+    var query = Api.getProductList({page: page, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query);
     return;
   },
@@ -292,7 +292,7 @@ var SearchResults = React.createClass({
     ) : (<View/>)
   },
   reloadList: function() {
-    var query = Api.getProductList({page: 1, offset: this.state.offset});
+    var query = Api.getProductList({page: 1, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query, true);
   },
 
@@ -325,4 +325,4 @@ var SearchResults = React.createClass({
   }
 })
 
-module.exports = SearchResults;
+module.exports = listsForeign;
