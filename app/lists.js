@@ -260,7 +260,7 @@ var SearchResults = React.createClass({
           underlayColor='#dddddd'>
         <View>
           <View style={styles.rowContainer}>
-            <Image style={styles.thumb} source={{ uri: Api.getImage(rowData.image) }} />
+            <Image style={styles.thumb} defaultSource={{uri: 'nophoto'}} source={{ uri: Api.getImage(rowData.image) }} />
             <View  style={styles.textContainer}>
               <Text style={styles.title} numberOfLines={3}>{title}</Text>
 
