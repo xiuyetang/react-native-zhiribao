@@ -16,6 +16,7 @@ var {
   Text,
   ScrollView,
   Component,
+  AsyncStorage
 } = React;
 
 var styles = StyleSheet.create({
@@ -120,13 +121,14 @@ var indicatorStylesheet = StyleSheet.create({
   },
 })
 
-var ds = new ListView.DataSource(
+var ads = new ListView.DataSource(
       {rowHasChanged: (r1, r2) => r1.id !== r2.id});
 
-var SearchResults = React.createClass({
+var AllList = React.createClass({
   mixins: [TimerMixin],
   resultData: [],
   cacheDataPid: [],
+  LastPid: 0,
 
   getInitialState: function() {
     
@@ -134,7 +136,7 @@ var SearchResults = React.createClass({
       isLoading: true,
       isLoadingTail: false,
       message : 'loading...',
-      dataSource: ds,
+      dataSource: ads,
       queryPage: 1,
       offset: 10,
       cacheDataLength: 0,
@@ -144,6 +146,12 @@ var SearchResults = React.createClass({
     
   },
   componentDidMount: function() {
+    AsyncStorage.getItem(Api.LastPid).then((value) => {
+      if (value !== null){
+        this.LastPid = value;
+      }
+    }).done();
+
     var query = Api.getProductList({page: this.state.queryPage, offset: this.state.offset});
     this._executeQuery(query);
   },
@@ -154,9 +162,10 @@ var SearchResults = React.createClass({
     if (response.status === 'ok') {
       if (pop) {
         // 倒序排列
-        response.data = response.data.reverse();
+        // response.data.reverse();
+        this.props.onHandleTabBarItemChange();
       }
-      // var dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
+      
       for (var i in response.data) {
         // 去重复
         // resultData.push(response.data[i]);
@@ -176,12 +185,18 @@ var SearchResults = React.createClass({
         } else {
           this.resultData.push(response.data[i]);
         }
+
+        if (response.data[i].id > this.LastPid) {
+          this.LastPid = response.data[i].id;
+          AsyncStorage.setItem(Api.LastPid, this.LastPid);
+        }
         // resultData.push(response.data[i]);
         this.cacheDataPid.push(response.data[i].id);
       }
 
+      console.log(this.resultData.length);
       this.setState({
-        dataSource : ds.cloneWithRows(this.resultData), //response.data,
+        dataSource : ads.cloneWithRows(this.resultData), //response.data,
         isLoading:false,
         isLoadingTail: false,
         cacheDataLength: response.data.length
@@ -325,4 +340,4 @@ var SearchResults = React.createClass({
   }
 })
 
-module.exports = SearchResults;
+module.exports = AllList;

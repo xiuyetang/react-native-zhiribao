@@ -6,6 +6,8 @@ var TimerMixin = require('react-timer-mixin');
 var ProductList = require('./app/lists');
 var ProductListForeign = require('./app/listsForeign');
 
+var Api = require('./app/api');
+
 //var SMXTabBarIOS = require('SMXTabBarIOS');
 // var SMXTabBarItemIOS = SMXTabBarIOS.Item;
 
@@ -40,43 +42,78 @@ function _icon(imageUri) {
   };
 }
 
-class zhiribao extends React.Component {
-  mixins: [TimerMixin];
+var zhiribao = React.createClass( {
+  mixins: [TimerMixin],
 
-  constructor(props) {
-    super(props);
-    this.state = {
+  getInitialState: function() {
+    return {
       selectedTab : 'list',
       reachability: null,
+      allNotice:0,
+      foreignNotice:0,
       openZrbExternal: (null: ?React.Component),
     };
-  }
-  componentDidMount() {
-    return;
+  },
+  componentDidMount:function() {
+    var LastPid = 0;
+    var LastForeignPid = 0;
+    var self = this;
+    // AsyncStorage.removeItem(Api.LastPid);
+    AsyncStorage.multiRemove([Api.LastPid, Api.LastForeignPid]);
+    
+    this.setInterval(() => {
+
+      AsyncStorage.getItem(Api.LastPid).then((value) => {
+        if (value !== null){
+          LastPid = value;
+        }
+      });
+
+      AsyncStorage.getItem(Api.LastForeignPid).then((value) => {
+        if (value !== null){
+          LastForeignPid = value;
+        }
+      });
+      if (LastPid == 0 && LastForeignPid == 0) {
+        return;
+      }
+      var query = Api.getUpdate({LastPid:LastPid, LastForeignPid: LastForeignPid});
+      console.log(query)
+      fetch(query)
+        .then(response => response.json())
+        .then((json) => {
+          self.setState({
+            allNotice:json.data.lastCount,
+            foreignNotice:json.data.lastForeignCount
+          });
+        })
+        .catch(error => {}).done();
+    }, 10000);
+    /*
     NetInfo.addEventListener(
       'change',
       this._handleReachabilityChange
     );
     NetInfo.fetch().done(
       (reachability) => { this.setState({reachability}); }
-    );
-  }
+    );*/
+  },
 
-
-  componentWillUnmount() {
+  componentWillUnmount: function() {
+    return;
     NetInfo.removeEventListener(
       'change',
       this._handleReachabilityChange
     );
-  }
+  },
 
-  _handleReachabilityChange(reachability) {
+  _handleReachabilityChange: function(reachability) {
     this.setState({
       reachability,
     });
-  }
+  }, 
 
-  render() { 
+  render: function() { 
     StatusBarIOS.setStyle('light-content');
     // StatusBarIOS.setHidden(true, 'none');
     if (this.state.reachability == 'None' || this.state.reachability == 'Unknown') {
@@ -98,7 +135,7 @@ class zhiribao extends React.Component {
               name="listTab"
               icon={require('image!home')}
               /*systemIcon="recents"*/
-              badge={2 > 0 ? 2 : undefined}
+              badge={this.state.allNotice > 0 ? this.state.allNotice : undefined}
               onPress={() => {
                   this.setState({
                     selectedTab: 'list'
@@ -116,6 +153,9 @@ class zhiribao extends React.Component {
                     passProps: {
                       onExternalZrbRequested: (zrbView) => {
                         this.setState({ openZrbExternal: zrbView, });
+                      },
+                      onHandleTabBarItemChange: () => {
+                        this.setState({allNotice: 0});
                       }
                     }
                   }} />
@@ -126,6 +166,7 @@ class zhiribao extends React.Component {
               title="海淘"
               name="foreignList"
               icon={require('image!foreign')}
+              badge={this.state.foreignNotice > 0 ? this.state.foreignNotice : undefined}
               onPress={() => {
                   this.setState({
                     selectedTab: 'foreign'
@@ -144,6 +185,9 @@ class zhiribao extends React.Component {
                       foreign:'us',
                       onExternalZrbRequested: (zrbView) => {
                         this.setState({ openZrbExternal: zrbView, });
+                      },
+                      onHandleTabBarItemChange: () => {
+                        this.setState({foreignNotice: 0});
                       }
                     }
                   }} />
@@ -173,8 +217,7 @@ class zhiribao extends React.Component {
                   }} />
     );
   }
-}
-
+});
 
 React.AppRegistry.registerComponent('值日报',
   function() { return zhiribao });
