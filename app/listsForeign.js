@@ -121,14 +121,14 @@ var indicatorStylesheet = StyleSheet.create({
   },
 })
 
-var ads = new ListView.DataSource(
+var ds = new ListView.DataSource(
       {rowHasChanged: (r1, r2) => r1.id !== r2.id});
 
-var AllList = React.createClass({
+var listsForeign = React.createClass({
   mixins: [TimerMixin],
   resultData: [],
   cacheDataPid: [],
-  LastPid: 0,
+  LastForeignPid: 0,
 
   getInitialState: function() {
     
@@ -136,7 +136,7 @@ var AllList = React.createClass({
       isLoading: true,
       isLoadingTail: false,
       message : 'loading...',
-      dataSource: ads,
+      dataSource: ds,
       queryPage: 1,
       offset: 10,
       cacheDataLength: 0,
@@ -146,13 +146,13 @@ var AllList = React.createClass({
     
   },
   componentDidMount: function() {
-    AsyncStorage.getItem(Api.LastPid).then((value) => {
+    AsyncStorage.getItem(Api.LastForeignPid).then((value) => {
       if (value !== null){
-        this.LastPid = value;
+        this.LastForeignPid = value;
       }
     }).done();
 
-    var query = Api.getProductList({page: this.state.queryPage, offset: this.state.offset});
+    var query = Api.getProductList({page: this.state.queryPage, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query);
   },
 
@@ -162,10 +162,10 @@ var AllList = React.createClass({
     if (response.status === 'ok') {
       if (pop) {
         // 倒序排列
-        response.data.reverse();
+        response.data = response.data.reverse();
         this.props.onHandleTabBarItemChange();
       }
-      
+      // var dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});
       for (var i in response.data) {
         // 去重复
         // resultData.push(response.data[i]);
@@ -185,18 +185,16 @@ var AllList = React.createClass({
         } else {
           this.resultData.push(response.data[i]);
         }
-
-        if (response.data[i].id > this.LastPid) {
-          this.LastPid = response.data[i].id;
-          AsyncStorage.setItem(Api.LastPid, this.LastPid);
+        if (response.data[i].id > this.LastForeignPid) {
+          this.LastForeignPid = response.data[i].id;
+          AsyncStorage.setItem(Api.LastForeignPid, this.LastForeignPid);
         }
         // resultData.push(response.data[i]);
         this.cacheDataPid.push(response.data[i].id);
       }
 
-      console.log(this.resultData.length);
       this.setState({
-        dataSource : ads.cloneWithRows(this.resultData), //response.data,
+        dataSource : ds.cloneWithRows(this.resultData), //response.data,
         isLoading:false,
         isLoadingTail: false,
         cacheDataLength: response.data.length
@@ -206,7 +204,6 @@ var AllList = React.createClass({
     }
   },
   _executeQuery: function(query, pop) {
-    console.log(query);
     fetch(query)
       .then(response => response.json())
       .then(json => this._handleResponse(json, pop))
@@ -253,7 +250,7 @@ var AllList = React.createClass({
       queryPage: page
     });
 
-    var query = Api.getProductList({page: page, offset: this.state.offset});
+    var query = Api.getProductList({page: page, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query);
     return;
   },
@@ -307,9 +304,8 @@ var AllList = React.createClass({
     ) : (<View/>)
   },
   reloadList: function() {
-    var query = Api.getProductList({page: 1, offset: this.state.offset});
+    var query = Api.getProductList({page: 1, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query, true);
-
   },
 
   render: function() {
@@ -319,7 +315,7 @@ var AllList = React.createClass({
     return (
 
         <RefreshableListView
-          ref="listAllview"
+          ref="listview"
           dataSource={this.state.dataSource}
           renderFooter={this.renderFooter}
 
@@ -341,4 +337,4 @@ var AllList = React.createClass({
   }
 })
 
-module.exports = AllList;
+module.exports = listsForeign;
