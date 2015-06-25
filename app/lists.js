@@ -162,7 +162,7 @@ var AllList = React.createClass({
     if (response.status === 'ok') {
       if (pop) {
         // 倒序排列
-        // response.data.reverse();
+        response.data.reverse();
         this.props.onHandleTabBarItemChange();
       }
       
@@ -309,6 +309,7 @@ var AllList = React.createClass({
   reloadList: function() {
     var query = Api.getProductList({page: 1, offset: this.state.offset});
     this._executeQuery(query, true);
+
   },
 
   render: function() {
@@ -318,7 +319,7 @@ var AllList = React.createClass({
     return (
 
         <RefreshableListView
-          ref="listview"
+          ref="listAllview"
           dataSource={this.state.dataSource}
           renderFooter={this.renderFooter}
 

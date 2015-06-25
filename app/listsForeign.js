@@ -162,7 +162,7 @@ var listsForeign = React.createClass({
     if (response.status === 'ok') {
       if (pop) {
         // 倒序排列
-        // response.data = response.data.reverse();
+        response.data = response.data.reverse();
         this.props.onHandleTabBarItemChange();
       }
       // var dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1.id !== r2.id});

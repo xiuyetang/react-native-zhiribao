@@ -47,11 +47,12 @@ var zhiribao = React.createClass( {
 
   getInitialState: function() {
     return {
-      selectedTab : 'list',
+      selectedTab : 'foreign',
       reachability: null,
       allNotice:0,
       foreignNotice:0,
       openZrbExternal: (null: ?React.Component),
+      loadNew:false
     };
   },
   componentDidMount:function() {
@@ -62,6 +63,10 @@ var zhiribao = React.createClass( {
     AsyncStorage.multiRemove([Api.LastPid, Api.LastForeignPid]);
     
     this.setInterval(() => {
+      console.log(this.state.loadNew);
+      if (this.state.loadNew) {
+        return;
+      }
 
       AsyncStorage.getItem(Api.LastPid).then((value) => {
         if (value !== null){
@@ -75,20 +80,24 @@ var zhiribao = React.createClass( {
         }
       });
       if (LastPid == 0 && LastForeignPid == 0) {
+        console.log(LastPid);
         return;
       }
+      self.setState({loadNew: true});
+
       var query = Api.getUpdate({LastPid:LastPid, LastForeignPid: LastForeignPid});
       console.log(query)
       fetch(query)
         .then(response => response.json())
         .then((json) => {
           self.setState({
+            loadNew: false,
             allNotice:json.data.lastCount,
             foreignNotice:json.data.lastForeignCount
           });
         })
         .catch(error => {}).done();
-    }, 10000);
+    }, 3000);
     /*
     NetInfo.addEventListener(
       'change',
@@ -131,7 +140,7 @@ var zhiribao = React.createClass( {
       <TabBarIOS selectedTab={this.state.selectedTab}>
         <TabBarItemIOS accessibilityLabel={"Latest"}
               selected={this.state.selectedTab === 'list'}
-              title="全部"
+              title="国内"
               name="listTab"
               icon={require('image!home')}
               /*systemIcon="recents"*/
