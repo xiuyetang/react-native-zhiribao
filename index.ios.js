@@ -47,7 +47,7 @@ var zhiribao = React.createClass( {
 
   getInitialState: function() {
     return {
-      selectedTab : 'foreign',
+      selectedTab : 'list',
       reachability: null,
       allNotice:0,
       foreignNotice:0,

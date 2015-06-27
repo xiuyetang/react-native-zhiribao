@@ -304,8 +304,62 @@ var listsForeign = React.createClass({
     ) : (<View/>)
   },
   reloadList: function() {
+    return this.fetchData()
+      .then(this.updateTopics)
+      .catch((error) => {});
+
     var query = Api.getProductList({page: 1, offset: this.state.offset, foreign: this.props.foreign});
     this._executeQuery(query, true);
+
+  },
+  updateTopics: function(newData: Object) {
+    if (newData.status == 'ok') {
+      var data = newData.data;
+      return new Promise((resolve) => {
+        console.log(data);
+        // Reverse newTopics because the topic will unshift into this.state.topics to get the right order.
+        data.reverse().forEach((item) => {
+          // Create if not exist.
+          // 去重复
+          var exists = false;
+          for (var j=0; j< this.cacheDataPid.length; j++) {
+            if (item.id == this.cacheDataPid[j]) {
+              exists = true;
+              break;
+            }
+          } 
+          if (!exists) {
+            this.resultData.unshift(item);
+
+            if (item.id > this.LastForeignPid) {
+              this.LastForeignPid = item.id;
+              AsyncStorage.setItem(Api.LastForeignPid, this.LastForeignPid);
+            }
+            // resultData.push(response.data[i]);
+            this.cacheDataPid.push(item.id);
+            // this.state.dataSource.unshift(item);
+          }
+          // Update if exist.
+        });
+        this.setState({
+          dataSource : ads.cloneWithRows(this.resultData), //response.data,
+          isLoading:false,
+          isLoadingTail: false,
+          cacheDataLength: data.length
+        });
+        this.forceUpdate(resolve);
+      });
+    }
+  },
+
+  fetchData: function() {
+    var query = Api.getProductList({page: 1, offset: this.state.offset, foreign: this.props.foreign});
+    return new Promise((resolve, reject) => {
+      fetch(query)
+        .then((response) => response.json())
+        .then(resolve)
+        .catch(reject);
+    });
   },
 
   render: function() {
@@ -330,9 +384,9 @@ var listsForeign = React.createClass({
           renderRow={this.renderRow}
           onEndReachedThreshold={0}
           onEndReached={this.onEndReached}
-          automaticallyAdjustContentInsets={true}
+          /*automaticallyAdjustContentInsets={true}
           keyboardShouldPersistTaps={false}
-          showsVerticalScrollIndicator={true}/>
+          showsVerticalScrollIndicator={true}*//>
     );
   }
 })
